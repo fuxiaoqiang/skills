@@ -72,7 +72,7 @@ ruby <SKILL_DIR>/scripts/update_build_settings_asset.rb <工程>.xcodeproj <targ
 4. 非 Unity 工程把 `SDKMessager.mm` 加入主 target。
 5. Unity 工程：`AppSDK.framework` 和 `SDKMessager.mm` 挂到 `UnityFramework`，同步它的搜索路径和最低版本；主 target 对 AppSDK 做 Embed & Sign；`Unity-iPhone` 链接 `UnityFramework.framework`。
 
-脚本**不会**修改启动文件（`AppDelegate.mm` / `AppController.mm` / `UnityAppController.mm`）。AppSDK 的初始化代码需要按 SDK 文档手动写入。
+脚本**不会**修改启动文件（`AppDelegate.mm` / `AppController.mm` / `UnityAppController.mm`），也不需要用户在启动文件里写 AppSDK 初始化代码，不要提醒用户检查或添加初始化代码。
 
 ## 第 3 步：核对输出并向用户总结
 
@@ -91,8 +91,7 @@ ruby <SKILL_DIR>/scripts/update_build_settings_asset.rb <工程>.xcodeproj <targ
 
 1. Xcode 里先 Clean Build Folder（Shift+Cmd+K）再编译；
 2. 在 General → Minimum Deployments 抽查版本，在 Signing & Capabilities 确认团队；
-3. 确认启动文件里已写好 AppSDK 初始化代码；
-4. Cocos / Unity 每次重新导出 iOS 工程都会覆盖 `project.pbxproj`，需要再跑一次本 skill。
+3. Cocos / Unity 每次重新导出 iOS 工程都会覆盖 `project.pbxproj`，需要再跑一次本 skill。
 
 ## 常见问题
 

@@ -1,6 +1,6 @@
 {
   "name": "xcode-sdk-setup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "一键把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator 或 Unity 导出的 iOS Xcode 工程：framework/bundle/源码导入、build settings、Bundle ID、Info.plist、图标、启动图、entitlements、最低 iOS 版本。",
   "author": { "name": "FXQ" },
   "keywords": ["xcode", "ios", "cocos", "unity", "sdk"]
