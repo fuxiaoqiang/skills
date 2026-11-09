@@ -824,6 +824,42 @@ def apply_deployment_target_to_subprojects(project, version, visited = {})
   results
 end
 
+# Engine targets (Cocos 3.x cocos_engine, Cocos 2.x libcocos2d iOS) need extra
+# C++ flags with newer clang (Xcode 27+), e.g. enoki/half.h specializes
+# std::is_floating_point, which is now -Winvalid-specialization (an error).
+ENGINE_TARGET_NAME_PATTERN = /\A(cocos_engine|libcocos2d|cocos2d)/i
+ENGINE_EXTRA_CPLUSPLUSFLAGS = %w[-Wno-invalid-specialization].freeze
+
+def engine_targets(project)
+  ios_targets(project).select { |t| t.name.to_s =~ ENGINE_TARGET_NAME_PATTERN }
+end
+
+# Append ENGINE_EXTRA_CPLUSPLUSFLAGS to OTHER_CPLUSPLUSFLAGS of engine targets in
+# the project and all sub-projects. Returns [{ project:, targets: [names] }].
+def apply_engine_cplusplus_flags(project, visited = {})
+  results = []
+  visited[File.expand_path(project.path.to_s)] = true
+  names = engine_targets(project).map do |t|
+    append_build_setting_values(t, 'OTHER_CPLUSPLUSFLAGS', ENGINE_EXTRA_CPLUSPLUSFLAGS)
+    t.name
+  end
+  results << { project: File.basename(project.path.to_s), targets: names } unless names.empty?
+  subproject_paths(project).each do |sub_path|
+    next if visited[sub_path]
+
+    begin
+      sub_project = Xcodeproj::Project.open(sub_path)
+    rescue StandardError => e
+      puts "Warning: failed to open sub-project #{sub_path}: #{e.message}"
+      next
+    end
+    sub_results = apply_engine_cplusplus_flags(sub_project, visited)
+    sub_project.save unless sub_results.empty?
+    results.concat(sub_results)
+  end
+  results
+end
+
 def unity_framework_file_ref?(file_ref)
   [file_ref.display_name, file_ref.name, file_ref.path].compact.any? do |name|
     File.basename(name.to_s) == 'UnityFramework.framework'
@@ -1496,6 +1532,8 @@ ios_deployment_target_names = apply_deployment_target_to_ios_targets(
 subproject_deployment_results = apply_deployment_target_to_subprojects(
   project, final_build_settings['IPHONEOS_DEPLOYMENT_TARGET']
 )
+# Engine targets need -Wno-invalid-specialization with newer clang (Xcode 27+).
+engine_flag_results = apply_engine_cplusplus_flags(project)
 
 imported_count = 0
 skipped_count = 0
@@ -1610,6 +1648,9 @@ subproject_deployment_results.each do |r|
 end
 append_build_settings.each do |key, values|
   puts "Appended to #{key}: #{values.join(', ')}"
+end
+engine_flag_results.each do |r|
+  puts "Appended OTHER_CPLUSPLUSFLAGS #{ENGINE_EXTRA_CPLUSPLUSFLAGS.join(' ')} to engine targets in #{r[:project]}: #{r[:targets].join(', ')}"
 end
 
 if add_dir

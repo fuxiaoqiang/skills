@@ -38,6 +38,7 @@ xcodebuild -project <工程>.xcodeproj -target <target> -configuration Debug \
 | `framework not found X` / `'X/X.h' file not found` | 检查 `FRAMEWORK_SEARCH_PATHS` / `HEADER_SEARCH_PATHS` 是否包含 SDK 目录（相对 `$(SRCROOT)`），缺了就 `--append` |
 | `Swift` 相关链接错误（`swiftCore`、`__swift_FORCE_LOAD`） | `--set ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES`，必要时在 `LIBRARY_SEARCH_PATHS` 追加 `$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)` |
 | `is only available on iOS X or newer` / `compiling for iOS N, but module was built for iOS M` | 用 `--ios-min M` 提高最低版本；汇报里写明改了版本 |
+| 引擎 target 报 `cannot be specialized: Users are not allowed to specialize this standard library entity [-Winvalid-specialization]` | 正常情况下脚本已自动处理。仍出现时，给报错的那个 target 的 `OTHER_CPLUSPLUSFLAGS` 追加 `-Wno-invalid-specialization`（用 xcodeproj gem 改，保留原值）。**不要修改引擎源码**，例如 `half.h` |
 | `ENABLE_BITCODE` 相关报错 | `--set ENABLE_BITCODE=NO` |
 | `duplicate symbol`，且是 SDK 源文件被同时加进了两个 target | 从错误的 target 移除该文件的编译引用 |
 

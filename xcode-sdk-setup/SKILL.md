@@ -70,6 +70,7 @@ ruby <SKILL_DIR>/scripts/update_build_settings_asset.rb <工程>.xcodeproj <targ
 2. `INFOPLIST_FILE` 指向 SDK 目录的 `Info.plist`；`PRODUCT_BUNDLE_IDENTIFIER` 取其中的 `CFBundleIdentifier` / `bundleid`。
 3. 处理图标、启动图、entitlements（见第 1 步）。
 4. 非 Unity 工程把 `SDKMessager.mm` 加入主 target。
+   另外，给引擎 target（Cocos 3.x 的 `cocos_engine`、Cocos 2.x 的 `libcocos2d iOS`，包括子工程里的）的 `OTHER_CPLUSPLUSFLAGS` 追加 `-Wno-invalid-specialization`，解决 Xcode 27 新版 clang 下引擎 `half.h` 报 `'is_floating_point' cannot be specialized` 的问题。输出里对应 `Appended OTHER_CPLUSPLUSFLAGS ... to engine targets` 一行。
 5. Unity 工程：`AppSDK.framework` 和 `SDKMessager.mm` 挂到 `UnityFramework`，同步它的搜索路径和最低版本；主 target 对 AppSDK 做 Embed & Sign；`Unity-iPhone` 链接 `UnityFramework.framework`。
 
 脚本**不会**修改启动文件（`AppDelegate.mm` / `AppController.mm` / `UnityAppController.mm`），也不需要用户在启动文件里写 AppSDK 初始化代码，不要提醒用户检查或添加初始化代码。
