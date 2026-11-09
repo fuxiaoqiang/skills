@@ -89,9 +89,15 @@ ruby <SKILL_DIR>/scripts/update_build_settings_asset.rb <工程>.xcodeproj <targ
 
 最后提醒用户：
 
-1. Xcode 里先 Clean Build Folder（Shift+Cmd+K）再编译；
+1. 命令行编译关闭了签名，在 Xcode 里真机运行前先 Clean Build Folder（Shift+Cmd+K）；
 2. 在 General → Minimum Deployments 抽查版本，在 Signing & Capabilities 确认团队；
 3. Cocos / Unity 每次重新导出 iOS 工程都会覆盖 `project.pbxproj`，需要再跑一次本 skill。
+
+## 第 4 步：编译验证，出错时尝试修复
+
+第 3 步没有 `Error:` 时，读取 `references/build-and-fix.md`，按里面的命令编译主 target。编译失败就按其中的规则修复：只改工程配置，最多 5 轮；需要改源代码、签名或 SDK 文件时停下来汇报。用户明确说不需要编译时跳过本步。
+
+当前环境不是 Mac 时跳过本步，把编译命令交给用户执行，再根据用户贴回的错误按同样的规则给出修复建议。
 
 ## 常见问题
 

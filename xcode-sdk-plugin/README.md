@@ -8,6 +8,8 @@
 - 设置 build settings、Bundle ID、Info.plist、签名团队、最低 iOS 版本
 - 可选：用 `1024.png` 生成 AppIcon、替换启动图、设置 entitlements
 - 修改前自动备份整个 `.xcodeproj`，可一键回滚
+- 接入后自动编译验证；出错时只改工程配置尝试修复（最多 5 轮），涉及源代码、签名或 SDK 文件的问题会停下来汇报
+- 附带 `xcode-sdk-setup-agent`：重新导出工程后，交给它从接入到编译一次跑完
 
 ## 使用方法
 
