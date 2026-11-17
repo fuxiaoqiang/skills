@@ -37,7 +37,7 @@
 | FRAMEWORK_SEARCH_PATHS | 保留已有路径和 `$(inherited)`，追加 `$(SRCROOT)/<SDK相对路径>` |
 | LD_RUNPATH_SEARCH_PATHS | 保留原值，追加 `$(inherited)`、`@executable_path/Frameworks`、`@loader_path/Frameworks` |
 
-额外字符串 / 数组覆盖只作用于明确的 key 和范围；数组追加保持原值、继承和顺序并去重。不要让新增搜索路径覆盖引擎 / Unity 原有路径。
+额外字符串 / 数组覆盖只作用于明确的 key 和范围；数组追加保持原值、继承和顺序并去重。不要让新增搜索路径覆盖引擎 / Unity / 团结原有路径。
 
 ### 最低版本和 Cocos 引擎
 
@@ -60,7 +60,7 @@
 | 其他普通资源 | 引用并加入主 App Resources |
 | Info.plist、.DS_Store、任意 .dSYM 目录 | 不作为普通资源导入 |
 
-包内的 framework 头文件和资源不单独挂载。跳过 AppDelegate.mm、AppController.mm、UnityAppController.mm 的自动编译挂载；保留工程原有启动源文件。
+包内的 framework 头文件和资源不单独挂载。跳过 AppDelegate.mm、AppController.mm、UnityAppController.mm、TuanjieAppController.mm 的自动编译挂载；保留工程原有启动源文件。
 
 ### Framework 链接和嵌入
 
@@ -74,20 +74,38 @@
 - 用 `plutil -p` / `plutil -extract ...` 读取 plist，SDK 原文件保持只读。
 - INFOPLIST_FILE 候选为 SDK 内与 framework/bundle 同级的 Info.plist，优先 SDK 根目录；不要误选 framework 内部的 Info.plist。多个非根候选且无法确定时询问。
 - INFOPLIST_FILE 使用相对工程路径。若工程开启自动生成 plist，检查 GENERATE_INFOPLIST_FILE 并让其与显式 plist 一致，避免重复生成；不丢失用户明确需要的 target plist 配置。
-- 从 SDK 根目录按 CFBundleIdentifier、bundleid、bundleId 顺序取具体 Bundle ID；空值或含 `$(...)` 变量时保留原 Bundle ID 并记录跳过。Unity 作用于 Unity-iPhone，否则为所选主 target。
+- 从 SDK 根目录按 CFBundleIdentifier、bundleid、bundleId 顺序取具体 Bundle ID；空值或含 `$(...)` 变量时保留原 Bundle ID 并记录跳过。Unity / 团结作用于已确定的主 App target（通常 Unity-iPhone / Tuanjie-iPhone），不写入引擎 framework、Tests 或 GameAssembly。
 - 根目录有 sdk.entitlements 时设置 CODE_SIGN_ENTITLEMENTS；没有则保留原配置。
 
-## SDKMessager 和 Unity
+## SDKMessager、Unity 和团结引擎（Tuanjie）
 
 SDK 根目录优先查找 SDKMessager.mm，否则递归查找；多个不同候选不能确定时返回候选。
 
-- 非 Unity：SDKMessager.mm 仅挂到选定主 target 的 Sources。
-- Unity（存在 UnityFramework）：AppSDK.framework 链接到 UnityFramework，SDKMessager.mm 编译到 UnityFramework；从主 App 移除本次 SDKMessager 的错误重复编译引用。
-- UnityFramework 搜索路径保留原值并追加 SDK 路径，最低 iOS 版本同步。
-- 主 App 对动态 AppSDK.framework 配置 Embed & Sign，并保留 / 补齐主 App 链接关系；静态包不嵌入。
-- Unity-iPhone 链接 UnityFramework target 的 productReference（通常 BUILT_PRODUCTS_DIR 的 UnityFramework.framework），不误指向 SDK 同名磁盘文件。保留已有 target dependency，不能删除 Unity 导出的依赖。
+### 识别主 App 与引擎 framework
+
+| 导出类型 | 常见主 App target | 常见引擎 framework target |
+|---|---|---|
+| Unity | Unity-iPhone | UnityFramework |
+| 团结引擎（Tuanjie） | Tuanjie-iPhone | TuanjieFramework |
+
+名称是识别线索，最终按 productType、iOS 平台、主 App 的 target dependencies 和产品引用确认配对。不得将团结工程中的 Unity 前缀源文件当作选择 UnityFramework 的依据，也不重命名团结 target、源文件或产品。
+
+- 排除 Tests / UI Tests、GameAssembly 等非主 App target。GameAssembly 保持原有编译和链接关系，不把 AppSDK 或 SDKMessager 挂到它上面。
+- 改过名称或混用前缀时，沿已选主 App 的依赖及 productReference 解析实际引擎 framework，不按模板强造缺失 target。
+- UnityFramework 和 TuanjieFramework 同时存在时，使用主 App 可唯一确定的配对；无法确定则返回候选询问，不同时挂到两者。
+- 工程结构表明属于 Unity / 团结但找不到应有的引擎 framework 时，停止报告缺失，不误走 Cocos 单 target 分支。只有确认无双 target 结构的普通工程才将 SDKMessager 挂到主 target。
+
+### 配置和验证
+
+- 非 Unity / 团结双 target 工程：SDKMessager.mm 仅挂到选定主 target 的 Sources。
+- 双 target 工程：AppSDK.framework 链接到确认的引擎 framework target，SDKMessager.mm 编译到该 target；从主 App 移除本次 SDKMessager 的错误重复编译引用。
+- 引擎 framework target 搜索路径保留原值并追加 SDK 路径，最低 iOS 版本同步。
+- 主 App 对动态 AppSDK.framework 配置 Embed & Sign，并保留 / 补齐主 App 链接关系；静态包不嵌入。不在引擎 framework 内再次嵌套 AppSDK。
+- 主 App 链接引擎 framework target 的实际 productReference（例如 BUILT_PRODUCTS_DIR 下的 UnityFramework.framework / TuanjieFramework.framework），不误指向 SDK 同名磁盘文件。核对主 App 对引擎产品已有的 Embed Frameworks 和 target dependency；缺失时按实际产品关系补齐，不能重复或删除其他导出依赖。
+- 团结示例：TuanjieFramework 链接 AppSDK 并编译 SDKMessager，Tuanjie-iPhone 嵌入动态 AppSDK 并链接 TuanjieFramework；Bundle ID / Info.plist / AppIcon / 启动图 / entitlements 设置在 Tuanjie-iPhone，Tests 与 GameAssembly 不参与接入。
 - 其他 SDK 源码沿用主 target 挂载；除上述 AppSDK / SDKMessager 外，不擅自重分配 target。
-- 缺少必要 AppSDK / SDKMessager 文件时报告缺失，不生成替代 SDK 文件。不修改启动源码、不添加初始化代码。
+- 缺少必要 AppSDK / SDKMessager 文件时报告缺失，不生成替代 SDK 文件。不修改启动源码、不添加初始化代码，包括实际名为 UnityAppController.mm、TuanjieAppController.mm 的启动源文件。
+- 构建使用与所选主 App 对应的实际 scheme；团结通常是 Tuanjie-iPhone，不能硬编码 Unity-iPhone。以 xcodebuild -list 返回及依赖图为准。
 
 ## AppIcon：只替换图标集
 
@@ -115,32 +133,20 @@ SDK 根目录优先查找 SDKMessager.mm，否则递归查找；多个不同候�
 - 移除主 target 上指向其他路径的同名启动 storyboard / 背景的旧 Resources 挂载。其他 target 仍使用的共享引用保留，无入边的旧对象可清理；不删除原磁盘资源。
 - 不编辑 SDK storyboard 或 SDK plist；如确需修改供应商文件或启动源码，停止并报告。
 
-## 自动检测 hortor 并同步蓝色资源文件夹
+## 可选 Cocos 2.x 蓝色资源文件夹同步
 
-每次 SDK 接入都执行此检测，不要求用户额外提供 --Asset 或单独提出资源同步。用户明确要求跳过此项时尊重其选择。该规则按实际导出目录结构触发，不仅按 Cocos 版本标签判断。
+仅用户要求此项（原 --Asset 能力）时执行：
 
-### 检测和触发
-
-- 以 `.xcodeproj` 所在目录为 P，检查 `P/hortor`、`P/data/hortor`、`P/../hortor`、`P/../data/hortor`。这覆盖工程位于 `proj/`、资源位于其同级 `data/` 的布局。
-- 同时读取工程已有的 hortor 文件夹或其内部文件引用，正确解析 group / SRCROOT 相对路径，向上定位实际存在的 hortor 目录。无现有引用也必须做上述磁盘检测，不能因此跳过。
-- 候选必须是实际存在的目录，不扫描整台电脑。规范化路径并解析软链接后去重；不存在的旧引用不作为触发依据。
-- 只有一个有效候选时自动触发，无需再次询问。多个候选时，若主 target 当前 Resources 的有效引用可唯一确定资源根，则使用该候选；否则列出候选返回主 agent / 用户选择，不猜测。
-- 选定 hortor 的父目录为资源根，只处理其直接子目录 `jsb-adapter`、`assets`、`src`、`hortor`。存在的目录逐个添加，缺失的逐个记录并跳过，不创建空目录，也不导入同级 main.js、application.*.js 等其他文件。
-- 未找到有效 hortor 时不执行资源同步，并在汇报中注明未命中。命中时操作前说明检测路径及处理范围，按已授权的 SDK 接入任务继续。
-
-### 工程修改
-
+- 根据工程现有 hortor 引用和实际路径定位包含 jsb-adapter、assets、src、hortor 的共同父目录，多个候选需确定。
 - 优先挂到主 target 的 Resources 分组；若改变 group.path 会影响其他子项，保留该分组路径，改用独立子组或正确的相对引用。
 - 将存在的上述目录设为 PBXFileReference，lastKnownFileType=folder（蓝色文件夹），加入主 App Resources。不删除磁盘目录。
-- 按实际目录路径复用已有正确蓝色引用及 Resources 挂载，重复执行不增加重复对象。
 - 清理主 target 对同一资源树的旧黄色分组 / 重复资源挂载，其他 target 使用的引用保留。
 - 清理旧 Copy Files 中 dstSubfolderSpec=7 且目标路径或文件路径匹配这些目录的旧资源拷贝。保留 Embed Frameworks、Embed App Extensions；混有无关文件时只移除对应项，不删整阶段。
-- 核对每个已存在目录恰好在主 App Resources 打包一次，引用能定位到原目录；汇报选定资源根及每个目录的新增、复用、清理或缺失状态。
 
 ## 完成核对
 
 - 所有对象 ID 唯一，新增对象的目标存在；从 rootObject / target 出发的关联完整，phase、build file、fileRef 和 group 没有悬空引用。
 - 全部新增文件路径能解析到正确文件；build setting 修改覆盖目标的所有构建配置，未波及其他平台。
-- 同一 phase 无重复挂载；Unity AppSDK / SDKMessager 所属正确，动态包 Embed & Sign 完整。
+- 同一 phase 无重复挂载；Unity / 团结 AppSDK / SDKMessager 所属正确，动态包 Embed & Sign 完整。
 - 重复接入时复用现有正确对象，设置和路径追加不重复。AppIcon 以外资产未改变。
 - 每个修改的工程用 plutil -lint 和 Xcode -list 检查，再按 build-and-fix.md 编译；记录命令、退出码和日志，不以文本看起来正确代替验证。

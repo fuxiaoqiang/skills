@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "xcode-sdk-setup",
-  "version": "0.6.2",
-  "description": "一键把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator 或 Unity 导出的 iOS Xcode 工程：framework/bundle/源码导入、build settings、Bundle ID、Info.plist、图标、启动图、entitlements、最低 iOS 版本。",
+  "version": "0.6.5",
+  "description": "一键把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator、Unity 或团结引擎（Tuanjie） 导出的 iOS Xcode 工程：framework/bundle/源码导入、build settings、Bundle ID、Info.plist、图标、启动图、entitlements、最低 iOS 版本；支持按 teamid 本地导出 App Store IPA，不上传。",
   "author": {
     "name": "FXQ"
   },
@@ -11,7 +11,8 @@
     "ios",
     "cocos",
     "unity",
-    "sdk"
+    "sdk",
+    "tuanjie"
   ],
   "repository": "https://github.com/fuxiaoqiang/skills",
   "license": "MIT",

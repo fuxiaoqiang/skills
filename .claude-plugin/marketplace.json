@@ -1,11 +1,13 @@
 {
   "name": "fxq-skills",
-  "owner": { "name": "FXQ" },
+  "owner": {
+    "name": "FXQ"
+  },
   "plugins": [
     {
       "name": "xcode-sdk-setup",
       "source": "./xcode-sdk-plugin",
-      "description": "把 SDK 目录一键接入 Cocos / Unity 导出的 iOS Xcode 工程"
+      "description": "把 SDK 目录一键接入 Cocos / Unity / 团结引擎 导出的 iOS Xcode 工程"
     }
   ]
 }

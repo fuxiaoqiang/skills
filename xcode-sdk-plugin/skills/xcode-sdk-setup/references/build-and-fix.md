@@ -31,6 +31,8 @@ printf 'build exit=%s\n' "$sdk_build_status"
 - Cocos 首次编译引擎可能超过 10 分钟：用后台方式运行，每隔一段时间查看 `tail -5 sdk-build.log`，直到出现 `** BUILD SUCCEEDED **` 或 `** BUILD FAILED **`。
 - 提取错误：`grep -nE "error:|ld: |Undefined symbols|duplicate symbol|\*\* BUILD" sdk-build.log | head -60`。只看第一个真正的错误，后面的错误常常是它引起的连锁反应。
 
+Unity / 团结使用实际主 App 的 scheme（如 Unity-iPhone / Tuanjie-iPhone），不得将 Tests、GameAssembly 或引擎 framework 的 scheme 当作 App 接入验证。
+
 ## 2. 修复循环
 
 - 最多尝试 **5 轮**（修改 → 重新编译）。每轮只改一处，改完立即重编，确认这处修改是否有效。
@@ -57,7 +59,7 @@ printf 'build exit=%s\n' "$sdk_build_status"
 ### 必须停下、不自己改的
 
 - 签名、证书、描述文件、Team 相关的错误（应该已被 `CODE_SIGNING_ALLOWED=NO` 排除；出现说明配置异常）。
-- 需要修改**任何源代码文件**的错误：引擎代码、SDK 源码、`AppDelegate.mm` / `AppController.mm` / `UnityAppController.mm`、游戏代码，包括 `UIScene life cycle is required` 这类需要改启动代码的情况。
+- 需要修改**任何源代码文件**的错误：引擎代码、SDK 源码、`AppDelegate.mm` / `AppController.mm` / `UnityAppController.mm` / `TuanjieAppController.mm`、游戏代码，包括 `UIScene life cycle is required` 这类需要改启动代码的情况。
 - 需要修改、删除 SDK 目录里的文件，或 SDK 里缺文件。
 - 与 SDK 接入无关的错误（例如引擎本身编译失败，回滚到备份后同样失败）。
 - 不确定原因的错误。不要靠猜测反复改配置。

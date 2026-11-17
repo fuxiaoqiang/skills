@@ -1,6 +1,6 @@
 # xcode-sdk-setup 插件
 
-把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator（2.x / 3.x）或 Unity 导出的 iOS Xcode 工程。
+把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator（2.x / 3.x）、Unity 或团结引擎（Tuanjie） 导出的 iOS Xcode 工程。
 
 ## 能做什么
 
@@ -24,23 +24,33 @@
 
 - SDK `Info.plist` 没有 `teamid` 时需提供自己的 Team ID，不再使用内置默认团队。
 - 生成图标时只替换所选 AppIcon 图标集，保留 `Images.xcassets` 及其他资产；修改前备份图标集。
-- 每次 Cocos / Unity 重新导出 iOS 工程后需要再跑一次。
+- 每次 Cocos / Unity / 团结引擎 重新导出 iOS 工程后需要再跑一次。
 
 ## SDK 接入方式（0.6.0 起）
 
 由 agent 读取实际工程，直接局部编辑 `project.pbxproj` 和资源，不再提供或调用 Ruby 接入脚本。无需安装 Ruby、gem 或第三方工程解析库；已有游戏工程本身依赖的 CocoaPods / Swift Packages 不在本插件的移除范围内。专用 agent 的安装、更新工具仍使用 Python 3.9+。
 
-保留 framework/bundle/源码导入、基础及自定义 build settings、最低版本与子工程同步、Info.plist / Bundle ID / Team、Unity 双 target、Cocos 引擎参数、启动图、entitlements，以及自动检测 hortor 的蓝色资源文件夹同步。可在提示中要求追加或覆盖指定设置、同步项目级设置。
+保留 framework/bundle/源码导入、基础及自定义 build settings、最低版本与子工程同步、Info.plist / Bundle ID / Team、Unity / 团结双 target、Cocos 引擎参数、启动图、entitlements，以及可选的 Cocos 2.x 蓝色资源文件夹同步。可在提示中要求追加或覆盖指定设置、同步项目级设置、同步 jsb-adapter/assets/src/hortor 资源目录。
 
 提供一张 `1024.png` 即可按图标模板生成 AppIcon；仅替换所选图标集，保留整个 `Images.xcassets` 及其他图片。动态 framework 配置 Embed & Sign，静态 framework 只链接。重复接入复用正确引用，修改前备份全部受影响的主/子工程和外部资源，随后检查引用关系、工程加载并编译；失败时最多进行 5 轮工程配置修复。
 
 旧版用户运行一次统一安装入口迁移固定 agent 配置并新建对话；后续工作流更新无需单独同步 agent。所有变更会汇报，需源码、签名或 SDK 原文件修改的问题停止交回用户。
 
-## 自动同步蓝色资源目录（0.6.2 起）
+## 团结引擎支持（0.6.4 起）
 
-接入 SDK 时会检查工程目录、上一级目录及它们的 `data/` 子目录，并结合工程已有引用寻找 `hortor`。例如工程在 `proj/`，同级有 `data/hortor` 时，会自动将 `data/` 下存在的 `jsb-adapter`、`assets`、`src`、`hortor` 添加成蓝色文件夹引用并加入主 target Resources，无需再指定 `--Asset`。
+团结导出的 `Tuanjie-iPhone` / `TuanjieFramework` 按 Unity 同类双 target 结构处理：AppSDK 链接到引擎 framework，SDKMessager.mm 由引擎 framework 编译，动态 AppSDK 由主 App Embed & Sign。主 App 链接实际引擎产品；Tests、GameAssembly 保留原有关系，不挂载 SDK。名称只作为线索，实际配对和构建 scheme 根据工程依赖确认，原 Unity 工程仍受支持。
 
-已有正确引用会复用，旧的重复资源挂载会清理；不删除磁盘资源，不导入同级其他 JS 文件。未发现 hortor 时跳过；目录缺失会逐项说明；多个候选无法唯一确定时才询问。用户也可以明确要求跳过资源同步。
+使用时说“请启动 xcode_sdk_setup agent，帮我接入团结引擎导出的 iOS 工程”，并提供 `.xcodeproj` 与 SDK 路径即可。已有用户更新工作流包后新建对话，不需另装一个团结 agent。
+
+## 导出 App Store IPA（0.6.5 起，不上传）
+
+可直接对 agent 说：
+
+> 请启动 xcode_sdk_setup agent，根据 SDK Info.plist 的 teamid，导出可用于 App Store 上传的 IPA，只导出不要上传。工程路径是……，SDK 目录是……。
+
+也可以说“接入 SDK 并导出 App Store IPA”。普通 SDK 接入不会自动打包。团结、Unity、Cocos 使用实际主 App 的 scheme，归档开启真实签名，再本地导出，固定 `destination=export`，不上传 IPA 或符号、不自动调整版本和 build 号。
+
+Team ID 只用于选择团队，不能替代证书、私钥、App Store 描述文件或 Xcode 账户权限。缺少签名条件会明确停止；需要联网管理签名资源时先说明具体操作。完成后提供 IPA、archive、dSYM、导出配置和日志路径，并进行本地包及签名检查；Apple 服务端处理和审核不属于本功能。
 
 ## 安装 SDK 接入 agent
 
