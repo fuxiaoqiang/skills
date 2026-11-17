@@ -18,7 +18,7 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator 或 Unit
 - SDK：实际 SDK 根目录绝对路径，检查 framework、bundle、源码、Info.plist 和可选资源；不修改 SDK 原文件。
 - 最低 iOS 版本：沿用现有版本；不同 target 值不一致时先说明将统一哪些 iOS target / 子工程并确定值。没有现值时提出 13.0 作为候选，待确定后使用，不暗中降级。
 - Team ID：SDK 根目录 `Info.plist` 的 `teamid` 优先，否则使用用户 / 调用方给出的值；均无则停止补齐，不使用内置团队。
-- 可选处理：SDK 的 `1024.png` 生成图标；LaunchScreen 及背景替换启动图；根目录 `sdk.entitlements` 设置权限文件；用户需要时才执行 Cocos 2.x 蓝色资源文件夹同步。
+- 可选处理：SDK 的 `1024.png` 生成图标；LaunchScreen 及背景替换启动图；根目录 `sdk.entitlements` 设置权限文件；每次接入自动检测工程附近的 hortor 资源目录，命中后同步其同级蓝色资源文件夹（详见 project-editing.md），无需用户指定 --Asset；用户明确跳过时不处理。
 - 支持用户指定额外字符串 / 数组 build setting、追加设置和项目级设置；确认覆盖还是追加，追加保留已有值及 `$(inherited)`，避免重复。
 
 执行前简述实际 target、最低版本、Team ID 来源及资源替换范围。图标只替换所选 AppIcon，保留整个 `Images.xcassets` 和其他资产。参数已确定且用户已授权的操作直接继续。
@@ -27,7 +27,7 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator 或 Unit
 
 用户要求独立 agent 时，主 agent 使用已注册的 `xcode_sdk_setup`。尚未注册则读取同包 `../xcode-sdk-agent-setup/SKILL.md` 完成安装并提示新建对话；当前客户端不支持子 agent 时说明限制，不冒充已委派。
 
-交接工程和 SDK 路径、target、最低版本、Team ID 来源、可选资源及蓝色文件夹范围、额外配置、是否编译，以及本 Skill 实际路径。主 agent 处理缺失信息及权限需求，等待结果并汇总；同一工程仅由一个执行者修改。子 agent 不再次委派。
+交接工程和 SDK 路径、target、最低版本、Team ID 来源、可选资源及自动检测到的蓝色文件夹路径与范围、额外配置、是否编译，以及本 Skill 实际路径。主 agent 处理缺失信息及权限需求，等待结果并汇总；同一工程仅由一个执行者修改。子 agent 不再次委派。
 
 ## 2. 直接修改工程
 
@@ -51,7 +51,7 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）接入 Cocos Creator 或 Unit
 - 实际工程、target、最低版本及涉及的 iOS target / 子工程。
 - Team ID 来源、Bundle ID、INFOPLIST_FILE、entitlements 设置或跳过原因。
 - 导入 / 复用 / 清理的引用及构建阶段；SDKMessager 所属 target；Unity link/embed 关系。
-- AppIcon 路径、生成尺寸、校验结果；说明其他资产保留；启动图和可选资源结果。
+- AppIcon 路径、生成尺寸、校验结果；说明其他资产保留；启动图和可选资源结果；hortor 自动检测候选、选中路径、四个资源目录的挂载或跳过原因。
 - 全部修改文件、配置检查与编译结果、日志路径、逐轮修复及未解决问题。
 
 说明关闭签名的编译不等于真机签名已验证；真机运行前在 Xcode 确认团队，必要时 Clean Build Folder。Cocos / Unity 重新导出覆盖工程后需重新接入。

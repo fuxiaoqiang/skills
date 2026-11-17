@@ -115,15 +115,27 @@ SDK 根目录优先查找 SDKMessager.mm，否则递归查找；多个不同候�
 - 移除主 target 上指向其他路径的同名启动 storyboard / 背景的旧 Resources 挂载。其他 target 仍使用的共享引用保留，无入边的旧对象可清理；不删除原磁盘资源。
 - 不编辑 SDK storyboard 或 SDK plist；如确需修改供应商文件或启动源码，停止并报告。
 
-## 可选 Cocos 2.x 蓝色资源文件夹同步
+## 自动检测 hortor 并同步蓝色资源文件夹
 
-仅用户要求此项（原 --Asset 能力）时执行：
+每次 SDK 接入都执行此检测，不要求用户额外提供 --Asset 或单独提出资源同步。用户明确要求跳过此项时尊重其选择。该规则按实际导出目录结构触发，不仅按 Cocos 版本标签判断。
 
-- 根据工程现有 hortor 引用和实际路径定位包含 jsb-adapter、assets、src、hortor 的共同父目录，多个候选需确定。
+### 检测和触发
+
+- 以 `.xcodeproj` 所在目录为 P，检查 `P/hortor`、`P/data/hortor`、`P/../hortor`、`P/../data/hortor`。这覆盖工程位于 `proj/`、资源位于其同级 `data/` 的布局。
+- 同时读取工程已有的 hortor 文件夹或其内部文件引用，正确解析 group / SRCROOT 相对路径，向上定位实际存在的 hortor 目录。无现有引用也必须做上述磁盘检测，不能因此跳过。
+- 候选必须是实际存在的目录，不扫描整台电脑。规范化路径并解析软链接后去重；不存在的旧引用不作为触发依据。
+- 只有一个有效候选时自动触发，无需再次询问。多个候选时，若主 target 当前 Resources 的有效引用可唯一确定资源根，则使用该候选；否则列出候选返回主 agent / 用户选择，不猜测。
+- 选定 hortor 的父目录为资源根，只处理其直接子目录 `jsb-adapter`、`assets`、`src`、`hortor`。存在的目录逐个添加，缺失的逐个记录并跳过，不创建空目录，也不导入同级 main.js、application.*.js 等其他文件。
+- 未找到有效 hortor 时不执行资源同步，并在汇报中注明未命中。命中时操作前说明检测路径及处理范围，按已授权的 SDK 接入任务继续。
+
+### 工程修改
+
 - 优先挂到主 target 的 Resources 分组；若改变 group.path 会影响其他子项，保留该分组路径，改用独立子组或正确的相对引用。
 - 将存在的上述目录设为 PBXFileReference，lastKnownFileType=folder（蓝色文件夹），加入主 App Resources。不删除磁盘目录。
+- 按实际目录路径复用已有正确蓝色引用及 Resources 挂载，重复执行不增加重复对象。
 - 清理主 target 对同一资源树的旧黄色分组 / 重复资源挂载，其他 target 使用的引用保留。
 - 清理旧 Copy Files 中 dstSubfolderSpec=7 且目标路径或文件路径匹配这些目录的旧资源拷贝。保留 Embed Frameworks、Embed App Extensions；混有无关文件时只移除对应项，不删整阶段。
+- 核对每个已存在目录恰好在主 App Resources 打包一次，引用能定位到原目录；汇报选定资源根及每个目录的新增、复用、清理或缺失状态。
 
 ## 完成核对
 

@@ -8,11 +8,17 @@
 
 由 agent 读取实际工程，直接局部编辑 `project.pbxproj` 和资源，不再提供或调用 Ruby 接入脚本。无需安装 Ruby、gem 或第三方工程解析库；已有游戏工程本身依赖的 CocoaPods / Swift Packages 不在本插件的移除范围内。专用 agent 的安装、更新工具仍使用 Python 3.9+。
 
-保留 framework/bundle/源码导入、基础及自定义 build settings、最低版本与子工程同步、Info.plist / Bundle ID / Team、Unity 双 target、Cocos 引擎参数、启动图、entitlements，以及可选的 Cocos 2.x 蓝色资源文件夹同步。可在提示中要求追加或覆盖指定设置、同步项目级设置、同步 jsb-adapter/assets/src/hortor 资源目录。
+保留 framework/bundle/源码导入、基础及自定义 build settings、最低版本与子工程同步、Info.plist / Bundle ID / Team、Unity 双 target、Cocos 引擎参数、启动图、entitlements，以及自动检测 hortor 的蓝色资源文件夹同步。可在提示中要求追加或覆盖指定设置、同步项目级设置。
 
 提供一张 `1024.png` 即可按图标模板生成 AppIcon；仅替换所选图标集，保留整个 `Images.xcassets` 及其他图片。动态 framework 配置 Embed & Sign，静态 framework 只链接。重复接入复用正确引用，修改前备份全部受影响的主/子工程和外部资源，随后检查引用关系、工程加载并编译；失败时最多进行 5 轮工程配置修复。
 
 旧版用户运行一次统一安装入口迁移固定 agent 配置并新建对话；后续工作流更新无需单独同步 agent。所有变更会汇报，需源码、签名或 SDK 原文件修改的问题停止交回用户。
+
+## 自动同步蓝色资源目录（0.6.2 起）
+
+接入 SDK 时会检查工程目录、上一级目录及它们的 `data/` 子目录，并结合工程已有引用寻找 `hortor`。例如工程在 `proj/`，同级有 `data/hortor` 时，会自动将 `data/` 下存在的 `jsb-adapter`、`assets`、`src`、`hortor` 添加成蓝色文件夹引用并加入主 target Resources，无需再指定 `--Asset`。
+
+已有正确引用会复用，旧的重复资源挂载会清理；不删除磁盘资源，不导入同级其他 JS 文件。未发现 hortor 时跳过；目录缺失会逐项说明；多个候选无法唯一确定时才询问。用户也可以明确要求跳过资源同步。
 
 ## 安装 SDK 接入 agent
 
