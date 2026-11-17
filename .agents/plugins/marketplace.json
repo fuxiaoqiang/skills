@@ -1,0 +1,12 @@
+{
+  "name": "fxq-skills",
+  "interface": { "displayName": "FXQ Skills" },
+  "plugins": [
+    {
+      "name": "xcode-sdk-setup",
+      "source": { "source": "local", "path": "./xcode-sdk-plugin" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Developer tools"
+    }
+  ]
+}

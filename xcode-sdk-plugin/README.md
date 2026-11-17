@@ -13,7 +13,7 @@
 
 ## 使用方法
 
-安装后，对 Claude 说「帮我把 SDK 接入 Xcode 工程」「重新导出 iOS 工程后配一下 SDK」即可。Claude 会先确认工程路径、target、SDK 目录、最低 iOS 版本和 Team ID，再运行脚本并汇总结果。
+支持 Claude 和 Codex。安装后，对助手说「帮我把 SDK 接入 Xcode 工程」「重新导出 iOS 工程后配一下 SDK」即可。助手会优先读取工程已有配置，补齐必要参数后确认工程路径、target、SDK 目录、最低 iOS 版本和 Team ID，再运行脚本并汇总结果。
 
 ## 运行要求
 
@@ -28,9 +28,23 @@
 
 ## 安装
 
-- **Claude 桌面版（Cowork）**：导入 `xcode-sdk-setup.plugin` 文件。
-- **Claude Code**：把本仓库推到 GitHub 后执行
-  ```
-  /plugin marketplace add <GitHub用户名>/<仓库名>
+### Codex
+
+```bash
+codex plugin marketplace add fuxiaoqiang/skills
+codex plugin add xcode-sdk-setup@fxq-skills
+```
+
+使用支持插件命令的新版 Codex CLI，安装后新建对话；未出现时重启客户端。Codex 使用共用 Skill 完成参数确认、接入、编译和有限修复，不依赖 Claude 专用子 agent。
+
+### Claude
+
+- **Claude 桌面版（Cowork）**：导入仓库根目录的 `xcode-sdk-setup.plugin` 文件。
+- **Claude Code**：
+
+  ```text
+  /plugin marketplace add fuxiaoqiang/skills
   /plugin install xcode-sdk-setup@fxq-skills
   ```
+
+本插件在本机操作 Xcode 工程。需要 macOS 和完整 Xcode；非 Mac 环境只提供命令和建议，不执行工程配置及编译。

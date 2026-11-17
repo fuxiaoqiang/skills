@@ -15,7 +15,9 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator �
 
 ## 第 1 步：确认参数
 
-向用户确认或自己从工程里查出下面几项，缺哪项就问哪项：
+优先从用户提供的信息和工程里查出下面几项，已能确定的参数不用重复询问。缺失的关键参数向用户询问；如果由独立子 agent 执行且无法提问，返回缺失项给调用方，补全后再运行。
+
+iOS App target 有多个候选且无法确定时，列出候选并等待选择，不要猜。最低 iOS 版本优先沿用工程现有值；多个 target 的版本不一致时，先说明脚本会统一版本并确定本次使用值。
 
 | 参数 | 说明 | 怎么查 |
 |---|---|---|
@@ -25,7 +27,7 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator �
 | 最低 iOS 版本 | 不传时脚本会把**所有** iOS target 改成默认 13.0 | `grep -o 'IPHONEOS_DEPLOYMENT_TARGET = [^;]*' project.pbxproj \| sort \| uniq -c`，沿用现有值 |
 | Team ID | 签名用的开发者团队 ID | 看 SDK `Info.plist` 有没有 `teamid` 键 |
 
-**Team ID 很重要**：SDK 的 `Info.plist` 里没有 `teamid` 时，脚本会用内置的默认 Team ID，这多半不是用户自己的团队。这种情况必须问用户要 Team ID，并加上 `--set DEVELOPMENT_TEAM=<TeamID>`。
+**Team ID 很重要**：SDK 的 `Info.plist` 里没有 `teamid` 时，脚本会用内置的默认 Team ID，这多半不是用户自己的团队。这种情况优先用用户或调用方明确提供的 Team ID；仍没有时不要运行脚本，先询问或向调用方返回缺失项。运行时加上 `--set DEVELOPMENT_TEAM=<TeamID>`。
 
 再检查 SDK 目录里有哪些可选文件，提前告诉用户会发生什么：
 
@@ -35,12 +37,12 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator �
 
 ## 第 2 步：运行
 
-**必须在 `.xcodeproj` 所在目录执行，并显式传工程名和 target 名**（脚本在 skill 目录里，自动查找工程会找不到）。`<SKILL_DIR>` 是本 skill 所在目录（作为插件安装时即 `${CLAUDE_PLUGIN_ROOT}/skills/xcode-sdk-setup`）。
+**必须在 `.xcodeproj` 所在目录执行，并显式传工程名和 target 名**（脚本在 skill 目录里，自动查找工程会找不到）。`<SKILL_DIR>` 是当前已加载的 `SKILL.md` 所在目录的绝对路径。Claude 和 Codex 都以实际安装位置为准，不要硬编码本仓库路径，也不要依赖插件专属环境变量。路径含空格时用引号包裹。
 
 ```bash
-cd <xcodeproj 所在目录>
-ruby <SKILL_DIR>/scripts/update_build_settings_asset.rb <工程>.xcodeproj <target> \
-  --add-dir <SDK目录，相对当前目录> --ios-min <版本> [--set DEVELOPMENT_TEAM=<TeamID>]
+cd "<xcodeproj 所在目录>"
+ruby "<SKILL_DIR>/scripts/update_build_settings_asset.rb" "<工程>.xcodeproj" "<target>" \
+  --add-dir "<SDK目录，相对当前目录>" --ios-min <版本> [--set DEVELOPMENT_TEAM=<TeamID>]
 ```
 
 示例：
