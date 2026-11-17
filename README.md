@@ -31,36 +31,25 @@ codex plugin marketplace upgrade fxq-skills
 
 ## Codex 专用 agent（可选）
 
-需要独立子 agent 执行时，先安装上面的插件，再克隆本仓库并运行安装脚本（需要 Python 3.9+）：
+安装插件后，新建 Codex 对话，直接说：
 
-```bash
-git clone https://github.com/fuxiaoqiang/skills.git
-cd skills
-python3 xcode-sdk-plugin/scripts/manage_codex_agent.py install
-```
+> 使用 xcode-sdk-agent-setup，安装 SDK 专用 agent。
 
-如果已经克隆，直接在仓库根目录运行最后一条命令即可。脚本会检查插件是否安装并启用，将专用 agent 写入 `${CODEX_HOME:-~/.codex}/agents/xcode_sdk_setup.toml`，不修改 `config.toml`。已有非本工具管理的同名文件会拒绝覆盖。
+Codex 会读取已安装插件中的设置 Skill，并运行同一插件包里的安装脚本。无需克隆本仓库，也无需在游戏工程里寻找脚本。支持插件设置入口的客户端也可运行插件设置（setup），入口指向同一个安装 Skill。
 
-安装后新建 Codex 对话（未识别时重启），在实际游戏工程目录中说：
+需要 Python 3.9+ 和支持自定义 agent 的 Codex。脚本检查插件已安装并启用，将配置写入 `${CODEX_HOME:-~/.codex}/agents/xcode_sdk_setup.toml`；不修改 `config.toml`、模型或权限。环境要求写入授权时会提示。已有非本工具管理的同名配置不会被覆盖。
+
+安装成功后再新建对话（未识别时重启），在实际游戏工程目录中说：
 
 > 请启动 xcode_sdk_setup 子 agent，使用 xcode-sdk-setup Skill 接入 SDK 并编译验证。工程路径是……，SDK 路径是……。
 
-主 agent 会补齐参数并告知图标等资源的处理影响，再交给子 agent 执行；可从子 agent 活动或 CLI 的 `/subagents` 确认实际启动。仅显示读取 `SKILL.md` 不代表已启动子 agent。需要支持自定义 agent 的新版 Codex，且当前会话未禁用子 agent；安装脚本不会更改权限、模型或全局开关。
+主 agent 补齐参数后再委派，可从子 agent 活动或 CLI 的 `/subagents` 确认实际启动。仅显示读取 `SKILL.md` 不代表已启动子 agent。当前会话需要允许子 agent。
 
-更新插件后，更新本地仓库并同步 agent：
+更新插件并新建对话后说“使用 xcode-sdk-agent-setup，更新 SDK 专用 agent”。更新会自动备份原配置；相同内容重复运行不修改文件。agent 执行时读取父会话继承的当前 Skill，不固定插件缓存版本。
 
-```bash
-git pull --ff-only
-python3 xcode-sdk-plugin/scripts/manage_codex_agent.py update
-```
+卸载专用配置时说“使用 xcode-sdk-agent-setup，卸载 SDK 专用 agent”。插件和备份会保留，卸载后新建对话。
 
-更新时自动备份原 agent；相同内容重复运行不修改文件。agent 不固定插件缓存版本，执行时读取父会话继承的当前 Skill。卸载专用 agent（保留插件）：
-
-```bash
-python3 xcode-sdk-plugin/scripts/manage_codex_agent.py uninstall
-```
-
-卸载后新建对话；备份文件保留，需要时手动恢复。
+开发者在仓库中测试时仍可直接运行 `python3 xcode-sdk-plugin/scripts/manage_codex_agent.py install`；普通用户使用上面的对话入口即可。
 
 ## Claude 安装
 
