@@ -29,6 +29,39 @@ codex plugin marketplace upgrade fxq-skills
 
 更新来源后，在插件目录检查插件更新；必要时重新安装并新建对话。这里提供的是 GitHub 仓库分发，不代表已经上架官方公共插件目录。
 
+## Codex 专用 agent（可选）
+
+需要独立子 agent 执行时，先安装上面的插件，再克隆本仓库并运行安装脚本（需要 Python 3.9+）：
+
+```bash
+git clone https://github.com/fuxiaoqiang/skills.git
+cd skills
+python3 xcode-sdk-plugin/scripts/manage_codex_agent.py install
+```
+
+如果已经克隆，直接在仓库根目录运行最后一条命令即可。脚本会检查插件是否安装并启用，将专用 agent 写入 `${CODEX_HOME:-~/.codex}/agents/xcode_sdk_setup.toml`，不修改 `config.toml`。已有非本工具管理的同名文件会拒绝覆盖。
+
+安装后新建 Codex 对话（未识别时重启），在实际游戏工程目录中说：
+
+> 请启动 xcode_sdk_setup 子 agent，使用 xcode-sdk-setup Skill 接入 SDK 并编译验证。工程路径是……，SDK 路径是……。
+
+主 agent 会补齐参数并告知图标等资源的处理影响，再交给子 agent 执行；可从子 agent 活动或 CLI 的 `/subagents` 确认实际启动。仅显示读取 `SKILL.md` 不代表已启动子 agent。需要支持自定义 agent 的新版 Codex，且当前会话未禁用子 agent；安装脚本不会更改权限、模型或全局开关。
+
+更新插件后，更新本地仓库并同步 agent：
+
+```bash
+git pull --ff-only
+python3 xcode-sdk-plugin/scripts/manage_codex_agent.py update
+```
+
+更新时自动备份原 agent；相同内容重复运行不修改文件。agent 不固定插件缓存版本，执行时读取父会话继承的当前 Skill。卸载专用 agent（保留插件）：
+
+```bash
+python3 xcode-sdk-plugin/scripts/manage_codex_agent.py uninstall
+```
+
+卸载后新建对话；备份文件保留，需要时手动恢复。
+
 ## Claude 安装
 
 Claude Code：
@@ -49,11 +82,13 @@ xcode-sdk-plugin/
   plugin.json                          通用插件清单
   .claude-plugin/plugin.json           Claude 插件清单
   agents/                              Claude 专用子 agent
+  codex-agents/                        Codex 专用子 agent 模板
+  scripts/manage_codex_agent.py         agent 安装、更新和卸载
   skills/xcode-sdk-setup/               两边共用的 Skill 和脚本
 scripts/package_plugin.py              重建 Claude 桌面安装包
 ```
 
-Codex 直接执行共用 Skill 中的完整流程；Claude 专用子 agent 保留给 Claude 使用。
+Codex 默认执行共用 Skill，也可通过安装脚本注册专用子 agent。Claude 专用子 agent 保留给 Claude 使用。
 
 ## 本地验证与发布
 

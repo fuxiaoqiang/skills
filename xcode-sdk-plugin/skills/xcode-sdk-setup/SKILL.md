@@ -7,6 +7,14 @@ description: 把 SDK 目录（AppSDK / TWSDK 等）一键接入 Cocos Creator �
 
 本 skill 自带脚本 `scripts/update_build_settings_asset.rb`（下称「脚本」），用它把 SDK 目录一次性配进 Xcode 工程。**不要自己重写脚本，也不要改用工程里其他版本**，除非用户明确要求。
 
+## Codex 专用 agent 交接
+
+用户要求独立 agent 执行时，主 agent 使用已注册的 `xcode_sdk_setup`，不要只在主会话执行后称已委派。若尚未注册，说明需要按插件说明安装专用 agent；当前客户端没有子 agent 能力时明确说明限制。
+
+主 agent 先按第 1 步补齐参数，并告知可选资源的影响，再委派。交接包括：工程和 SDK 的绝对路径、iOS App target、最低 iOS 版本、Team ID 及来源、图标/启动图/entitlements 处理范围、是否编译，以及当前 Skill 的实际路径。运行期间由主 agent 处理子 agent 返回的缺失参数或授权需求，补齐后继续同一个执行任务。等待子 agent 完成，再向用户汇总；同一工程不要由多个 agent 同时修改。
+
+子 agent 直接按下面流程执行，不再次委派。普通 Skill 调用仍可由主 agent 完成。
+
 ## 运行环境
 
 - 必须在 **macOS** 上运行（依赖系统自带的 `plutil` 和 `sips`），需要 Ruby。
